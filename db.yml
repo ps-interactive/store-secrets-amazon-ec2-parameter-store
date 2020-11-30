@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  This template is for provisioning of
+  any resource that uses instances such as
+  EC2 and RDS
+Parameters:
+  VPC:
+    Type: 'AWS::EC2::VPC::Id'
+  DbSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup::Id'
+    Description: Security group used by the interface endpoint
+
+Resources:
+
+  Database:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      AllocatedStorage: "30"
+      BackupRetentionPeriod: "7"
+      DBInstanceClass: "db.t3.medium"
+      DBInstanceIdentifier: ParameterStore-Lab-Db
+      DBName: demo
+      DBSubnetGroupName: "parameterstore-lab-db-subnet-group"
+      Engine: postgres
+      MasterUsername: labuser
+      MasterUserPassword: '{{resolve:ssm-secure:DBPassword:1}}'
+      MultiAZ: false
+      Port: '5432'
+      PubliclyAccessible: false
+      StorageEncrypted: true
+      StorageType: standard
+      VPCSecurityGroups: 
+        - !Ref DbSecurityGroup
+
+
+Outputs:
+
+  DatabaseEndpoint:
+    Value: !GetAtt Database.Endpoint.Address
+  
